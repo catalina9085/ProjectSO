@@ -11,8 +11,11 @@ typedef struct {
 
 Treasure** readTreasures(int* size);
 int isDirectory(char* dirName);
-void addDirectory(char* dirName);
+void addHunt(char* dirName);
 void printTreasures(char* dirName, char* fileName);
-void listDirectory(char* dirName);
-
-
+void listHunt(char* dirName);
+void viewTreasure(char* hundId, char* treasureId);
+void removeTreasure(char* hundId, char* treasureId);
+void removeHunt(char* huntId);
+void createLogFile(char* name);
+void writeInInternalLogFile(char* dirName, char* internalLogName, char* message);
