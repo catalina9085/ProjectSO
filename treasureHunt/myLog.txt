@@ -1,0 +1,4 @@
+--add hunt1
+--view hunt1 id1
+--remove_treasure hunt1 id1
+--remove_hunt hunt1

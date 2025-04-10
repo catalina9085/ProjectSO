@@ -13,15 +13,16 @@ int main(int argc, char** argv) {
     if(strcmp(op,"--print")==0)
 	  readLogFile("myLog.txt");
     if (argc > 2) {
-        if (strcmp(op, "--add") == 0)
-            addHunt(argv[2]);
-        else if (strcmp(op, "--list") == 0)
-            listHunt(argv[2]);
-        else if (strcmp(op, "--remove_hunt") == 0)
-            removeHunt(argv[2]);
         char message[1000] = { 0 };
-        sprintf(message, "%s %s", op, argv[2]);
-        writeInInternalLogFile(argv[2], "interLog.txt", message);
+        sprintf(message, "%s %s\n", op, argv[2]);
+        if (strcmp(op, "--add") == 0)
+	  addHunt(argv[2],message);
+        else if (strcmp(op, "--list") == 0)
+	  listHunt(argv[2],message);
+        else if (strcmp(op, "--remove_hunt") == 0){
+            removeHunt(argv[2]);
+	    writeInExternalLogFile(message);
+	}
     }
     if (argc > 3) {
         if (strcmp(op, "--view") == 0)
@@ -29,7 +30,7 @@ int main(int argc, char** argv) {
         else if (strcmp(op, "--remove_treasure") == 0)
             removeTreasure(argv[2], argv[3]);
         char message[1000] = { 0 };
-        sprintf(message, "%s %s %s", op, argv[2], argv[3]);
+        sprintf(message, "%s %s %s\n", op, argv[2], argv[3]);
         writeInInternalLogFile(argv[2], "interLog.txt", message);
     }
     return 0;

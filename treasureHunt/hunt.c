@@ -22,16 +22,24 @@ void createLogFile(char* name) {
     }
 }
 
+void writeInExternalLogFile(char *message){
+  int logFD = open("myLog.txt", O_RDWR | O_APPEND, 0777);
+    if (logFD == -1) {
+        perror("couldn't open external log file!");
+        exit(-1);
+    }
+    write(logFD, message, strlen(message));
+    close(logFD);
+}
 void writeInInternalLogFile(char* dirName, char* internalLogName, char* message) {
     char internLogPath[100];
     sprintf(internLogPath, "%s/%s", dirName, internalLogName);
-    printf("%s\n",internLogPath);
     int logFD = open(internLogPath, O_RDWR | O_APPEND, 0777);
     if (logFD == -1) {
         perror("couldn't open internal log file!");
         exit(-1);
     }
-    write(logFD, &message, strlen(message));
+    write(logFD, message, strlen(message));
     close(logFD);
 
 }
@@ -53,7 +61,7 @@ void closeFile(int fd) {
         exit(-1);
     }
 }
-Treasure** readTreasures(int* size) {
+Treasure** readTreasures(int* size,char *message,char *dirName) {
     char id[max];
     char name[max];
     char clue[max];
@@ -94,6 +102,8 @@ Treasure** readTreasures(int* size) {
         newTreasure->lat = lat;
         newTreasure->lng = lng;
         treasures[(*size)++] = newTreasure;
+	writeInInternalLogFile(dirName,"interLog.txt",message);
+	
     }
     return treasures;
 }
@@ -106,7 +116,7 @@ int isDirectory(char* dirName) {
     return 0;
 }
 
-void addHunt(char* dirName) {
+void addHunt(char* dirName,char *message) {
     char internLogPath[100];
     sprintf(internLogPath, "%s/%s", dirName, "interLog.txt");
     if (!isDirectory(dirName)) {//daca nu exista deja,il cream
@@ -115,14 +125,14 @@ void addHunt(char* dirName) {
             exit(-1);
         }
         //int logFD = open(internLogPath, O_RDWR | O_CREAT | O_APPEND, 0777);
-        int sl = symlink("myLog.txt", internLogPath);
+        int sl = symlink("../myLog.txt", internLogPath);
         if (sl == -1) {
             perror("couldn't create symlink!");
             exit(-1);
         }
     }
     int size = 0;
-    Treasure** treasures = readTreasures(&size);
+    Treasure** treasures = readTreasures(&size,message,dirName);
 
     char filePath[max];
     sprintf(filePath, "%s/treasures", dirName);
@@ -171,7 +181,7 @@ void printTreasures(char* dirName, char* fileName) {
     closeFile(fd);
 
 }
-void listHunt(char* dirName) {
+void listHunt(char* dirName,char *message) {
     DIR* dir = opendir(dirName);
     if (!dir) {
         perror("Couldn't open directory!");
@@ -191,6 +201,7 @@ void listHunt(char* dirName) {
         exit(-1);
     }
     closeDir(dir);
+    writeInInternalLogFile(dirName,"interLog.txt",message);
 }
 
 
@@ -307,7 +318,7 @@ void readLogFile(char *name){
         exit(-1);
     }
   char buffer[100];
-  while(read(fd, &buffer, sizeof(buffer))>0){
+  while(read(fd, buffer, sizeof(buffer))>0){
     printf("%s",buffer);
   }
   printf("\n");
