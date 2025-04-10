@@ -4,12 +4,14 @@
 #include "hunt.h"
 
 int main(int argc, char** argv) {
-    if (argc <= 2) {
+    if (argc < 2) {
         printf("Not enough arguments!");
         exit(-1);
     }
-    createLogFile("log.txt");
+    createLogFile("myLog.txt");
     char* op = argv[1];
+    if(strcmp(op,"--print")==0)
+	  readLogFile("myLog.txt");
     if (argc > 2) {
         if (strcmp(op, "--add") == 0)
             addHunt(argv[2]);

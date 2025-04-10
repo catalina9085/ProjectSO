@@ -25,6 +25,7 @@ void createLogFile(char* name) {
 void writeInInternalLogFile(char* dirName, char* internalLogName, char* message) {
     char internLogPath[100];
     sprintf(internLogPath, "%s/%s", dirName, internalLogName);
+    printf("%s\n",internLogPath);
     int logFD = open(internLogPath, O_RDWR | O_APPEND, 0777);
     if (logFD == -1) {
         perror("couldn't open internal log file!");
@@ -109,12 +110,12 @@ void addHunt(char* dirName) {
     char internLogPath[100];
     sprintf(internLogPath, "%s/%s", dirName, "interLog.txt");
     if (!isDirectory(dirName)) {//daca nu exista deja,il cream
-        if (mkdir(dirName/*,0777*/) != 0) {
+        if (mkdir(dirName,0777) != 0) {
             perror("Couldn't create directory");
             exit(-1);
         }
-        int logFD = open(internLogPath, O_RDWR | O_CREAT | O_APPEND, 0777);
-        int sl = symlink("log.txt", internLogPath);
+        //int logFD = open(internLogPath, O_RDWR | O_CREAT | O_APPEND, 0777);
+        int sl = symlink("myLog.txt", internLogPath);
         if (sl == -1) {
             perror("couldn't create symlink!");
             exit(-1);
@@ -296,4 +297,19 @@ void removeHunt(char* path) {
     }
     rmdir(path);
 
+}
+
+
+void readLogFile(char *name){
+  int fd=open(name,O_RDONLY);
+  if (fd == -1) {
+        perror("Couldn't open file!");
+        exit(-1);
+    }
+  char buffer[100];
+  while(read(fd, &buffer, sizeof(buffer))>0){
+    printf("%s",buffer);
+  }
+  printf("\n");
+  closeFile(fd);
 }
