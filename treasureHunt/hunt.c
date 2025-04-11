@@ -68,7 +68,7 @@ void toLowerCaseString(char* str) {
 //la comanda --add,userul intra intr-o bucla unde decide daca vrea sa mai adauge un treasure
 //dupa fiecare treasure adaugat,se adauga mesajul in fisierul de log
 Treasure** readTreasures(int* size,char *dirName) {
-    char id[max]={0},name[max]={0},clue[max]={0},message[max]={0};
+    char id[max]={0},name[max]={0},clue[max]={0},message[4000]={0};
     double lat, lng;
     int val;
     char agreeToContinue[10]={0};
@@ -299,12 +299,10 @@ void removeTreasure(char* huntId, char* treasureId) {
 //functie pentru comanda "--remove_hunt <huntId>"
 void removeHunt(char* path) {
     DIR* dir = opendir(path);
-    printf("0");
     if (!dir) {
         perror("Couldn't open directory!");
         exit(-1);
     }
-    printf("1");
     struct dirent* entry;
     while ((entry = readdir(dir))) {
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
@@ -322,17 +320,4 @@ void removeHunt(char* path) {
 
 }
 
-//functie pentru citirea fisierului extern de log
-void readLogFile(char *name){
-  int fd=open(name,O_RDONLY);
-  if (fd == -1) {
-        perror("Couldn't open file!");
-        exit(-1);
-    }
-  char buffer[100];
-  while(read(fd, buffer, sizeof(buffer))>0){
-    printf("%s",buffer);
-  }
-  printf("\n");
-  closeFile(fd);
-}
+

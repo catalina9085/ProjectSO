@@ -1,5 +1,5 @@
 #pragma once
-#define max 5000
+#define max 1000
 
 typedef struct {
 	char id[max];
@@ -19,5 +19,4 @@ void removeTreasure(char* hundId, char* treasureId);
 void removeHunt(char* huntId);
 void createLogFile(char* name);
 void writeInInternalLogFile(char* dirName, char* internalLogName, char *message);
-void readLogFile(char *name);
 void writeInExternalLogFile(char *message);
