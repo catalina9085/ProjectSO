@@ -32,7 +32,18 @@ void writeInInternalLogFile(char* dirName, char* internalLogName, char* message)
         perror("couldn't open internal log file!");
         exit(-1);
     }
-    write(logFD, message, strlen(message));
+    time_t now=time(NULL);
+    struct tm *t=localtime(&now);
+    char time[32];
+    strftime(time,sizeof(time),"[%Y-%m-%d %H:%M:%S]",t);
+    if(write(logFD,time,strlen(time))!=strlen(time)){
+    	perror(NULL);
+    	exit(-1);
+    }
+    if(write(logFD, message, strlen(message))!=strlen(message)){
+    	perror(NULL);
+    	exit(-1);
+    }
     closeFile(logFD);
 
 }
@@ -90,8 +101,8 @@ Treasure** readTreasures(int* size,char *dirName) {
         	if(!treasures) exit(-1);
         }
         treasures[(*size)++] = newTreasure;
-        sprintf(message,"--add %s (%s,%s,%lf,%lf,%s,%d)\n",dirName,id,name,lat,lng,clue,val);
-				writeInInternalLogFile(dirName,"logged_hunt.bin",message);
+        sprintf(message,"--add %s (%s,%s,%.2lf,%.2lf,%s,%d)\n",dirName,id,name,lat,lng,clue,val);
+	writeInInternalLogFile(dirName,"logged_hunt.bin",message);
 	
     }
     return treasures;
@@ -114,7 +125,11 @@ void addHunt(char* dirName) {
             perror("Couldn't create directory");
             exit(-1);
         }
-        int logFD = open(internLogPath, O_RDWR | O_CREAT | O_APPEND, 0777);
+        int logFD = open(internLogPath,O_CREAT, 0777);
+        if(logFD==-1){
+        	perror("Couldn't create log file!");
+        	exit(-1);
+        }
         char symbolicLog[100]={0};
         sprintf(symbolicLog,"logged_hunt_%s.bin",dirName);//fisierul din directorul de lucru
         int sl = symlink(internLogPath, symbolicLog);
