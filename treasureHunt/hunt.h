@@ -17,6 +17,6 @@ void listHunt(char* dirName);
 void viewTreasure(char* hundId, char* treasureId);
 void removeTreasure(char* hundId, char* treasureId);
 void removeHunt(char* huntId);
-void createLogFile(char* name);
 void writeInInternalLogFile(char* dirName, char* internalLogName, char *message);
-void writeInExternalLogFile(char *message);
+void removeSymbolicLog(char *huntID);
+

@@ -22,28 +22,6 @@ void closeFile(int fd) {
         exit(-1);
     }
 }
-//creare fisier de log global,in directorul curent(unde ruleaza programul)
-void createLogFile(char* name) {
-    struct stat myStat;
-    if (stat(name, &myStat) == -1) {
-        //nu exista,o cream
-        if (creat(name, 0777) == -1) {
-            perror("couldn't create log file!");
-            exit(-1);
-        }
-    }
-}
-
-//scriere directa in fisierul de log extern
-void writeInExternalLogFile(char *message){
-  int logFD = open("myLog.bin", O_RDWR | O_APPEND, 0777);
-    if (logFD == -1) {
-        perror("couldn't open external log file!");
-        exit(-1);
-    }
-    write(logFD, message, strlen(message));
-    closeFile(logFD);
-}
 
 //scriere in fisierul de log intern,specific fiecarui hunt
 void writeInInternalLogFile(char* dirName, char* internalLogName, char* message) {
@@ -113,7 +91,7 @@ Treasure** readTreasures(int* size,char *dirName) {
         }
         treasures[(*size)++] = newTreasure;
         sprintf(message,"--add %s (%s,%s,%lf,%lf,%s,%d)\n",dirName,id,name,lat,lng,clue,val);
-				writeInInternalLogFile(dirName,"interLog.bin",message);
+				writeInInternalLogFile(dirName,"logged_hunt.bin",message);
 	
     }
     return treasures;
@@ -130,14 +108,16 @@ int isDirectory(char* dirName) {
 //functie pentru comanda "--add <huntId>"
 void addHunt(char* dirName) {
     char internLogPath[100];
-    sprintf(internLogPath, "%s/%s", dirName, "interLog.bin");
+    sprintf(internLogPath, "%s/logged_hunt.bin", dirName);
     if (!isDirectory(dirName)) {//daca nu exista deja,il cream
         if (mkdir(dirName,0777) != 0) {
             perror("Couldn't create directory");
             exit(-1);
         }
-        //int logFD = open(internLogPath, O_RDWR | O_CREAT | O_APPEND, 0777);
-        int sl = symlink("../myLog.bin", internLogPath);
+        int logFD = open(internLogPath, O_RDWR | O_CREAT | O_APPEND, 0777);
+        char symbolicLog[100]={0};
+        sprintf(symbolicLog,"logged_hunt_%s.bin",dirName);//fisierul din directorul de lucru
+        int sl = symlink(internLogPath, symbolicLog);
         if (sl == -1) {
             perror("couldn't create symlink!");
             exit(-1);
@@ -218,7 +198,7 @@ void listHunt(char* dirName) {
     closeDir(dir);
     char message[max];
     sprintf(message,"--list %s\n",dirName);
-    writeInInternalLogFile(dirName,"interLog.bin",message);
+    writeInInternalLogFile(dirName,"logged_hunt.bin",message);
 }
 
 //functie pentru comanda "--view <huntId> <treasureId>"
@@ -254,7 +234,7 @@ void viewTreasure(char* huntId, char* treasureId) {
     closeDir(dir);
     char message[max];
     sprintf(message,"--view %s %s\n",huntId,treasureId);
-    writeInInternalLogFile(huntId,"interLog.bin",message);
+    writeInInternalLogFile(huntId,"logged_hunt.bin",message);
 }
 
 //functie pentru comanda "--remove_treasure <huntId> <treasureId>"
@@ -291,11 +271,15 @@ void removeTreasure(char* huntId, char* treasureId) {
     closeDir(dir);
     char message[max];
     sprintf(message,"--remove_treasure %s %s\n",huntId,treasureId);
-    writeInInternalLogFile(huntId,"interLog.bin",message);
+    writeInInternalLogFile(huntId,"logged_hunt.bin",message);
 }
 
 
-
+void removeSymbolicLog(char *huntId){
+	char name[100]={0};
+	sprintf(name,"logged_hunt_%s.bin",huntId);
+	unlink(name);
+}
 //functie pentru comanda "--remove_hunt <huntId>"
 void removeHunt(char* path) {
     DIR* dir = opendir(path);

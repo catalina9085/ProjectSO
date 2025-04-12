@@ -8,7 +8,6 @@ int main(int argc, char** argv) {
         printf("Not enough arguments!");
         exit(-1);
     }
-    createLogFile("myLog.bin");
     char* op = argv[1];
     if (argc > 2) {
         if (strcmp(op, "--add") == 0)
@@ -17,10 +16,8 @@ int main(int argc, char** argv) {
 	  listHunt(argv[2]);
         else if (strcmp(op, "--remove_hunt") == 0){
             removeHunt(argv[2]);
-            char message[max]={0};
-            sprintf(message,"--remove_hunt %s\n",argv[2]);
-	    writeInExternalLogFile(message);
-	}
+            removeSymbolicLog(argv[2]);
+        }
     }
     if (argc > 3) {
         if (strcmp(op, "--view") == 0)
