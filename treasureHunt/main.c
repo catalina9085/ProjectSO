@@ -6,7 +6,10 @@
 int main(int argc, char** argv) {
     if (argc < 3) {
         printf("Not enough arguments!");
-        exit(-1);
+         for (int i = 0; i < argc; i++) {
+        printf("argv[%d] = %s\n", i, argv[i]);
+    }
+    exit(-1);
     }
     char* op = argv[1];
     if (argc == 3) {

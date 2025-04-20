@@ -4,15 +4,92 @@
 #include <unistd.h>
 #include <signal.h>
 #include <errno.h>
-void handle_list_treasures(int sig) {
-    printf("\nChild: Received signal to list treasures!\n");
+#include <fcntl.h>
+#include <sys/wait.h>
 
+int pipefd;
+pid_t childPid;
+void handler(int sig) {
+    lseek(pipefd, 0, SEEK_SET);
+    char command[300];
+    int n = read(pipefd, command, sizeof(command));
+    command[n] = '\0';
+    char *args[5];
+    char *token = strtok(command, " ");
+    int i = 0;
+    while (token != NULL) {
+        args[i] = token;
+        i++;
+        token = strtok(NULL, " ");
+    }
+    args[i] = NULL;
+    
+    chdir("./treasureHunt");
+    if (execvp(args[0], args) == -1) {
+        perror("execvp failed");
+        exit(1);
+    }
 }
 
-pid_t childPid;
+void endHandler(){
+    exit(0);
+}
+
+void listTreasures(){
+    if (childPid > 0) {
+        char huntId[100]={0};
+        printf("Enter hunt id: ");
+        if(scanf("%99s",huntId)!=1) exit(-1);
+        char fullMessage[300]={0};
+        sprintf(fullMessage,"%s %s %s","./p","--list",huntId);
+        write(pipefd,fullMessage,strlen(fullMessage));
+        kill(childPid, SIGUSR1);
+    } else {
+        printf("No monitor started yet!\n");
+    }
+}
+
+void viewTreasure(){
+    if (childPid > 0) {
+        char huntId[100]={0};
+        char treasureId[100]={0};
+        printf("Enter hunt id: ");
+        if(scanf("%99s",huntId)!=1) exit(-1);
+        printf("Enter treasure id: ");
+        if(scanf("%99s",treasureId)!=1) exit(-1);
+        char fullMessage[300]={0};
+        sprintf(fullMessage,"%s %s %s %s","./p","--view",huntId,treasureId);
+        write(pipefd,fullMessage,strlen(fullMessage));
+        kill(childPid, SIGUSR1);
+    } else {
+        printf("No monitor started yet!\n");
+    }
+}
+
+void stopMonitor(){
+    kill(childPid, SIGTERM);
+    int status;
+    waitpid(childPid, &status, 0);
+
+        if (WIFEXITED(status)) {
+            printf("Parent: Child exited normally with status %d\n", WEXITSTATUS(status));
+        } else if (WIFSIGNALED(status)) {
+            printf("Parent: Child was terminated by signal %d\n", WTERMSIG(status));
+        } else {
+            printf("Parent: Child ended abnormally\n");
+        }
+}
+
 int main(){
     char command[100];
     int existsMonitor=0;
+    int fd = open("pipe.txt", O_RDWR | O_CREAT, 0777);
+
+    if (fd == -1) {
+        perror("Couldn't create/open file!");
+        exit(-1);
+    }
+    pipefd=fd;
     while(1){
         printf("Enter comand: ");
         if(scanf("%99s",command)!=1) exit(-1);
@@ -27,11 +104,18 @@ int main(){
                 perror("Couldn't open another process!");
                  exit(-1);
             }
-            printf("Monitor successfully started!\n");
-            childPid=pid;
             if(pid==0){
-                struct sigaction sa;
-                sa.sa_handler = handle_list_treasures;
+                struct sigaction sa,sa_end;
+                sa_end.sa_handler = endHandler;
+                sigemptyset(&sa_end.sa_mask);
+                sa_end.sa_flags = 0;
+
+                if (sigaction(SIGTERM, &sa_end, NULL) == -1) {
+                    perror("sigaction(SIGTERM) failed");
+                    exit(1);
+                }
+
+                sa.sa_handler = handler;
                 sigemptyset(&sa.sa_mask);
                 sa.sa_flags = 0;
 
@@ -45,13 +129,22 @@ int main(){
 
                 exit(0);
             }
+            printf("Monitor successfully started!\n");
+            childPid=pid;
         }
         else if(strcmp(command,"list_treasures")==0){
-            if (childPid > 0) {
-                kill(childPid, SIGUSR1);
-            } else {
-                printf("No monitor started yet!\n");
-            }
+            listTreasures();
+        }
+        else if(strcmp(command,"view_treasure")==0){
+            viewTreasure();
+        }
+        else if(strcmp(command,"stop_monitor")==0){
+            stopMonitor();
+            existsMonitor=0;
+        }
+        else if(strcmp(command,"exit")==0){
+            if(existsMonitor) printf("The monitor is still running!You can stop it with *stop_monitor*\n");
+            else{ exit(0);}
         }
     }
     return 0;
