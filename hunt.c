@@ -194,7 +194,7 @@ void printTreasures(char* dirName, char* fileName) {
 void listHunt(char* dirName) {
     DIR* dir = opendir(dirName);
     if (!dir) {
-        perror("Couldn't open directory!");
+        perror("Couldn't open directoryy!");
         exit(-1);
     }
     int found = 0;
