@@ -40,16 +40,31 @@ void handler(int sig) {
 void endHandler(){
     exit(0);
 }
-
-void listTreasures(){
+void sendSignal(int type){
     if (childPid > 0) {
         int fd = open("pipe.txt", O_RDWR | O_CREAT|O_TRUNC, 0777);
-        char huntId[100]={0};
-        printf("Enter hunt id: ");
-        if(scanf("%99s",huntId)!=1) exit(-1);
         char fullMessage[300]={0};
-        sprintf(fullMessage,"%s %s %s","./p","--list",huntId);
-        write(fd,fullMessage,strlen(fullMessage));
+        if(type==1){//list_hunts
+            sprintf(fullMessage,"%s %s %s","./p","--list","--all");
+            write(fd,fullMessage,strlen(fullMessage));
+        }
+        else if(type==2){//list_treasures
+            char huntId[100]={0};
+            printf("Enter hunt id: ");
+            if(scanf("%99s",huntId)!=1) exit(-1);
+            sprintf(fullMessage,"%s %s %s","./p","--list",huntId);
+            write(fd,fullMessage,strlen(fullMessage));
+        }
+        else if(type==3){//view_treasure
+            char huntId[100]={0};
+            char treasureId[100]={0};
+            printf("Enter hunt id: ");
+            if(scanf("%99s",huntId)!=1) exit(-1);
+            printf("Enter treasure id: ");
+            if(scanf("%99s",treasureId)!=1) exit(-1);
+            sprintf(fullMessage,"%s %s %s %s","./p","--view",huntId,treasureId);
+            write(fd,fullMessage,strlen(fullMessage));
+        }
         close(fd);
         int result=kill(childPid, SIGUSR1);
         if (result == -1) {
@@ -63,25 +78,8 @@ void listTreasures(){
     }
 }
 
-void viewTreasure(){
-    if (childPid > 0) {
-        int fd = open("pipe.txt", O_RDWR | O_CREAT|O_TRUNC, 0777);
-        char huntId[100]={0};
-        char treasureId[100]={0};
-        printf("Enter hunt id: ");
-        if(scanf("%99s",huntId)!=1) exit(-1);
-        printf("Enter treasure id: ");
-        if(scanf("%99s",treasureId)!=1) exit(-1);
-        char fullMessage[300]={0};
-        sprintf(fullMessage,"%s %s %s %s","./p","--view",huntId,treasureId);
-        write(fd,fullMessage,strlen(fullMessage));
-        close(fd);
-        kill(childPid, SIGUSR1);
-        usleep(100000);
-    } else {
-        printf("No monitor started yet!\n");
-    }
-}
+
+
 
 void stopMonitor(){
     kill(childPid, SIGTERM);
@@ -100,13 +98,7 @@ void stopMonitor(){
 int main(){
     char command[100];
     int existsMonitor=0;
-    //int fd = open("pipe.txt", O_RDWR | O_CREAT|O_TRUNC, 0777);
 
-    /*if (fd == -1) {
-        perror("Couldn't create/open file!");
-        exit(-1);
-    }*/
-    //pipefd=fd;
     while(1){
         printf("Enter comand: ");
         if(scanf("%99s",command)!=1) exit(-1);
@@ -151,14 +143,17 @@ int main(){
             childPid=pid;
         }
         else if(strcmp(command,"list_treasures")==0){
-            listTreasures();
+            sendSignal(2);
         }
         else if(strcmp(command,"view_treasure")==0){
-            viewTreasure();
+            sendSignal(3);
         }
         else if(strcmp(command,"stop_monitor")==0){
             stopMonitor();
             existsMonitor=0;
+        }
+        else if(strcmp(command,"list_hunts")==0){
+            sendSignal(1);
         }
         else if(strcmp(command,"exit")==0){
             if(existsMonitor) printf("The monitor is still running!You can stop it with *stop_monitor*\n");

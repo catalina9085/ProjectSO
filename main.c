@@ -14,9 +14,11 @@ int main(int argc, char** argv) {
     char* op = argv[1];
     if (argc == 3) {
         if (strcmp(op, "--add") == 0)
-	  addHunt(argv[2]);
-        else if (strcmp(op, "--list") == 0)
-	  listHunt(argv[2]);
+	        addHunt(argv[2]);
+        else if (strcmp(op, "--list") == 0){
+            if(strcmp(argv[2],"--all")==0) listAllHunts();
+	        else listHunt(argv[2]);
+        }
         else if (strcmp(op, "--remove_hunt") == 0){
             removeHunt(argv[2]);
             removeSymbolicLog(argv[2]);

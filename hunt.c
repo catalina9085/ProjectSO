@@ -174,8 +174,9 @@ void printTreasures(char* dirName, char* fileName) {
         perror("Couldn't read file properties");
         exit(-1);
     }
+    int treasureCnt=myStat.st_size/sizeof(Treasure);
     printf("Hunt id:%s\n", dirName);
-    printf("File size:%ld\nLast modified:%s\n", myStat.st_size, ctime(&myStat.st_mtime));
+    printf("File size:%ld\nLast modified:%sNumber or treasures:%d\n\n", myStat.st_size, ctime(&myStat.st_mtime),treasureCnt);
     int fd = open(path, O_RDONLY, 0777);
     if (fd == -1) {
         perror("Couldn't open the treasures file!");
@@ -319,4 +320,18 @@ void removeHunt(char* path) {
 
 }
 
+void listAllHunts(){
+    DIR* dir = opendir(".");
+    struct dirent* entry;
+    while ((entry = readdir(dir))) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0||strcmp(entry->d_name,".git")==0)
+            continue;
+        if (isDirectory(entry->d_name)) {
+            printf("%s\n",entry->d_name);
+            listHunt(entry->d_name);
+        }
+    }
+    closeDir(dir);
+
+}
 

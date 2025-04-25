@@ -19,4 +19,4 @@ void removeTreasure(char* hundId, char* treasureId);
 void removeHunt(char* huntId);
 void writeInInternalLogFile(char* dirName, char* internalLogName, char *message);
 void removeSymbolicLog(char *huntID);
-
+void listAllHunts();

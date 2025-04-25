@@ -1,1 +1,1 @@
-./p --list hunt1
+./p --view hunt1 id1
