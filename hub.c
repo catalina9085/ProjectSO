@@ -8,6 +8,7 @@
 #include <sys/wait.h>
 
 pid_t childPid; //pid ul monitorului
+int existsMonitor=0;
 
 void handler(int sig) {
     //citire comanda din fisierul pipe.txt
@@ -19,6 +20,7 @@ void handler(int sig) {
     char command[300];
     int n = read(fd, command, sizeof(command));
     printf("Raw command read from pipe.txt: %s\n", command);
+    close(fd);
     command[n] = '\0';
     char *args[5];
     char *token = strtok(command, " ");
@@ -29,15 +31,22 @@ void handler(int sig) {
         token = strtok(NULL, " ");
     }
     args[i] = NULL;
-    
-    if (execvp(args[0], args) == -1) {
-        perror("execvp failed");
-        exit(1);
+    pid_t pid=fork();
+    if(pid==-1){
+        perror("Couldn't open another process!");
+        exit(-1);
     }
-    close(fd);
+    if(pid==0){
+        if (execvp(args[0], args) == -1) {
+            perror("execvp failed");
+            exit(1);
+        }
+    }
 }
 
 void endHandler(){
+    for(int i=0;i<10;i++)
+        usleep(900000);
     exit(0);
 }
 void sendSignal(int type){
@@ -87,6 +96,7 @@ void stopMonitor(){
     waitpid(childPid, &status, 0);
 
         if (WIFEXITED(status)) {
+            existsMonitor=0;
             printf("Parent: Child exited normally with status %d\n", WEXITSTATUS(status));
         } else if (WIFSIGNALED(status)) {
             printf("Parent: Child was terminated by signal %d\n", WTERMSIG(status));
@@ -97,7 +107,6 @@ void stopMonitor(){
 
 int main(){
     char command[100];
-    int existsMonitor=0;
 
     while(1){
         printf("Enter comand: ");
@@ -150,7 +159,7 @@ int main(){
         }
         else if(strcmp(command,"stop_monitor")==0){
             stopMonitor();
-            existsMonitor=0;
+            printf("Monitorul a fost închis complet.\n");
         }
         else if(strcmp(command,"list_hunts")==0){
             sendSignal(1);
