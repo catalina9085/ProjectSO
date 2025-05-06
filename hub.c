@@ -6,6 +6,11 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <dirent.h>
+#include <time.h>
+#include <ctype.h>
 
 pid_t childPid; //pid ul monitorului
 int existsMonitor=0;
@@ -112,7 +117,39 @@ void stopMonitor(){
             printf("Parent: Child ended abnormally\n");
         }
 }
-
+int isDirectory(char* dirName) {
+    struct stat myStat;
+    if (stat(dirName, &myStat) == -1)
+        return 0;//nu exista
+    if (S_ISDIR(myStat.st_mode)) return 1;
+    return 0;
+}
+void calculateScores(){
+    DIR* dir = opendir(".");
+    struct dirent* entry;
+    char *args[3];
+    strcpy(args[0],"./score_p");
+    args[2]=NULL;
+    while ((entry = readdir(dir))) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0||strcmp(entry->d_name,".git")==0)
+            continue;
+        if (isDirectory(entry->d_name)) {
+            strcpy(args[1],entry->d_name);
+            pid_t pid=fork();
+            if(pid==-1){
+                perror("Couldn't open another process!");
+                exit(-1);
+            }
+            if(pid==0){
+                if (execvp(args[0], args) == -1) {
+                    perror("execvp failed");
+                    exit(1);
+                }
+            }
+        }
+    }
+    closedir(dir);
+}
 int main(){
     char command[100];
     if(pipe(pfd)<0){
@@ -178,6 +215,9 @@ int main(){
         }
         else if(strcmp(command,"list_hunts")==0){
             sendSignal(1);
+        }
+        else if(strcmp(command,"calculate_scores")==0){
+            calculateScores();
         }
         else if(strcmp(command,"exit")==0){
             if(existsMonitor) printf("The monitor is still running!You can stop it with *stop_monitor*\n");
