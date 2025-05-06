@@ -9,6 +9,7 @@
 
 pid_t childPid; //pid ul monitorului
 int existsMonitor=0;
+int pfd[2];
 
 void handler(int sig) {
     //citire comanda din fisierul pipe.txt
@@ -37,6 +38,7 @@ void handler(int sig) {
         exit(-1);
     }
     if(pid==0){
+        dup2(pfd[1],1);
         if (execvp(args[0], args) == -1) {
             perror("execvp failed");
             exit(1);
@@ -82,6 +84,12 @@ void sendSignal(int type){
             printf("Signal sent to child successfully\n");
         }
         usleep(100000);
+        char buffer[1024];
+            ssize_t n;
+            while((n=read(pfd[0],buffer,sizeof(buffer)-1))>0){
+                buffer[n]=0;
+                printf("Parintele a primit:\n%s\n",buffer);
+            }
     } else {
         printf("No monitor started yet!\n");
     }
@@ -107,6 +115,11 @@ void stopMonitor(){
 
 int main(){
     char command[100];
+    if(pipe(pfd)<0){
+        perror("Eroare la creare pipe!");
+        exit(-1);
+    }
+    fcntl(pfd[0],F_SETFL,O_NONBLOCK);
 
     while(1){
         printf("Enter comand: ");
@@ -124,6 +137,7 @@ int main(){
                  exit(-1);
             }
             if(pid==0){
+                close(pfd[0]);//inchidem capatul de citire
                 struct sigaction sa,sa_end;
                 sa_end.sa_handler = endHandler;
                 sigemptyset(&sa_end.sa_mask);
@@ -149,6 +163,7 @@ int main(){
                 exit(0);
             }
             printf("Monitor successfully started!\n");
+            close(pfd[1]);//inchidem capatul de scriere
             childPid=pid;
         }
         else if(strcmp(command,"list_treasures")==0){
