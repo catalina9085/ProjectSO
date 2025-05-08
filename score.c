@@ -17,33 +17,7 @@ typedef struct {
 	char clue[max];
 	int val;
 }Treasure;
-/*
-void printTreasures(char* dirName, char* fileName) {
-    printf("\n----------------------------------------------------------------------------------------------\n");
-    char path[max];
-    sprintf(path, "%s/%s", dirName, fileName);
-    struct stat myStat;
-    if (stat(path, &myStat) == -1) {
-        perror("Couldn't read file properties");
-        exit(-1);
-    }
-    int treasureCnt=myStat.st_size/sizeof(Treasure);
-    printf("Hunt id:%s\n", dirName);
-    printf("File size:%ld\nLast modified:%sNumber or treasures:%d\n\n", myStat.st_size, ctime(&myStat.st_mtime),treasureCnt);
-    int fd = open(path, O_RDONLY, 0777);
-    if (fd == -1) {
-        perror("Couldn't open the treasures file!");
-        exit(-1);
-    }
-    Treasure t;
-    while (read(fd, &t, sizeof(Treasure)) == sizeof(Treasure)) {
-        printf("ID: %s\nName: %s\nCoordinates: (%.2lf, %.2lf)\nClue: %s\nValue: %d\n\n",
-            t.id, t.name, t.lat, t.lng, t.clue, t.val);
-    }
-    close(fd);
 
-}
-*/
 int isDirectory(char* dirName) {
     struct stat myStat;
     if (stat(dirName, &myStat) == -1)
@@ -58,20 +32,23 @@ void calculateScore(char *dirName){
     int fd = open(path, O_RDONLY, 0777);
     if (fd == -1) {
         perror("Eroare la deschiderea fisierului treasures.bin");
-        return 0;
+        exit(-1);
     }
     Treasure t;
     while (read(fd, &t, sizeof(Treasure)) == sizeof(Treasure)) {
         score+=t.val;
-        printf("Value:%d\n",t.val);
+        printf("Id:%s-Value:%d\n",t.id,t.val);
     }
-    printf("%s:%d\n",dirName,score);
+    printf("Total %s:%d\n",dirName,score);
     close(fd);
 }
 
 int main(int argc,char **argv){
-    if(argc>2)
+    if(argc>1)
         calculateScore(argv[1]);
+    else{
+        printf("Not enough arguments!");
+    }
     //getScoresForAllHunts();
     return 0;
 }

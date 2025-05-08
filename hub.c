@@ -14,7 +14,8 @@
 
 pid_t childPid; //pid ul monitorului
 int existsMonitor=0;
-int pfd[2];
+int pfd[2];//intre monitor si programul principal
+int sfd[2]; //intre scores si programul principal
 
 void handler(int sig) {
     //citire comanda din fisierul pipe.txt
@@ -125,9 +126,12 @@ int isDirectory(char* dirName) {
     return 0;
 }
 void calculateScores(){
+    printf("\n");
     DIR* dir = opendir(".");
     struct dirent* entry;
-    char *args[3];
+    char **args=malloc(3*sizeof(char *));
+    for(int i=0;i<2;i++)
+        args[i]=malloc(100*sizeof(char));
     strcpy(args[0],"./score_p");
     args[2]=NULL;
     while ((entry = readdir(dir))) {
@@ -141,10 +145,20 @@ void calculateScores(){
                 exit(-1);
             }
             if(pid==0){
+                close(sfd[0]);
+                dup2(sfd[1],1);
                 if (execvp(args[0], args) == -1) {
                     perror("execvp failed");
                     exit(1);
                 }
+            }
+            close(sfd[1]);
+            usleep(100000);
+        char buffer[1024];
+            ssize_t n;
+            while((n=read(sfd[0],buffer,sizeof(buffer)-1))>0){
+                buffer[n]=0;
+                printf("Parintele a primit:\n%s\n",buffer);
             }
         }
     }
@@ -152,11 +166,12 @@ void calculateScores(){
 }
 int main(){
     char command[100];
-    if(pipe(pfd)<0){
+    if(pipe(pfd)<0 || pipe(sfd)<0){
         perror("Eroare la creare pipe!");
         exit(-1);
     }
     fcntl(pfd[0],F_SETFL,O_NONBLOCK);
+    fcntl(sfd[0],F_SETFL,O_NONBLOCK);
 
     while(1){
         printf("Enter comand: ");
